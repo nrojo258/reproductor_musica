@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
 import 'full_player_screen.dart';
+import 'queue_screen.dart';
 
 class NowPlayingBar extends StatelessWidget {
   const NowPlayingBar({super.key});
@@ -51,20 +52,43 @@ class NowPlayingBar extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      
-                      // Song Info
+
+                      // Información de la canción
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              provider.cancionActual?.titulo ?? '',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                            Row(
+                              children: [
+                                // Indicador de posición en cola
+                                if (provider.modoReproduccion == 'queue')
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.deepPurple,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${provider.posicionActual}/${provider.totalCola}',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    provider.cancionActual?.titulo ?? '',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -79,11 +103,11 @@ class NowPlayingBar extends StatelessWidget {
                           ],
                         ),
                       ),
-                      
-                      // Playback Controls
+
+                      // Botones de control
                       Row(
                         children: [
-                          // Favorite Button
+                          // Botón de favorito
                           IconButton(
                             icon: Icon(
                               provider.cancionActual?.esFavorita ?? false
@@ -100,15 +124,31 @@ class NowPlayingBar extends StatelessWidget {
                               }
                             },
                           ),
-                          
-                          // Previous Button
+
+                          // Botón de cola
+                          IconButton(
+                            icon: const Icon(Icons.queue_music, size: 20),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const QueueScreen(),
+                                ),
+                              );
+                            },
+                            color: provider.modoReproduccion == 'queue'
+                                ? Colors.deepPurple
+                                : Colors.white,
+                          ),
+
+                          // Botón anterior
                           IconButton(
                             icon: const Icon(Icons.skip_previous),
                             onPressed: provider.cancionAnterior,
                             color: Colors.white,
                           ),
-                          
-                          // Play/Pause Button
+
+                          // Botón play/pausa
                           Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
@@ -128,8 +168,8 @@ class NowPlayingBar extends StatelessWidget {
                               ),
                             ),
                           ),
-                          
-                          // Next Button
+
+                          // Botón siguiente
                           IconButton(
                             icon: const Icon(Icons.skip_next),
                             onPressed: provider.siguienteCancion,
@@ -140,21 +180,19 @@ class NowPlayingBar extends StatelessWidget {
                     ],
                   ),
                 ),
-                
-                // Progress Bar
+
+                // Barra de progreso
                 Container(
                   height: 2,
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   child: LinearProgressIndicator(
                     value: provider.totalDuration.inSeconds > 0
-                        ? provider.currentPosition.inSeconds /
-                            provider.totalDuration.inSeconds
+                        ? provider.currentPosition.inSeconds / provider.totalDuration.inSeconds
                         : 0,
                     backgroundColor: Colors.grey.shade800,
                     color: Colors.deepPurple,
                   ),
                 ),
-                
                 const SizedBox(height: 4),
               ],
             ),
@@ -165,7 +203,6 @@ class NowPlayingBar extends StatelessWidget {
   }
 
   Widget _buildAlbumArt(AudioProvider provider) {
-    // Si tiene imagen de portada, mostrarla
     if (provider.cancionActual?.portadaBytes != null) {
       return Image.memory(
         provider.cancionActual!.portadaBytes!,
@@ -175,8 +212,7 @@ class NowPlayingBar extends StatelessWidget {
         },
       );
     }
-    
-    // Si no tiene portada, mostrar icono por defecto
+
     return _buildDefaultIcon();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
+import 'queue_screen.dart';
 
 class FullPlayerScreen extends StatelessWidget {
   const FullPlayerScreen({super.key});
@@ -31,204 +32,293 @@ class FullPlayerScreen extends StatelessWidget {
             child: SafeArea(
               child: Column(
                 children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_downward, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  // Header con botones
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Album Art
-                        Container(
-                          width: 280,
-                          height: 280,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.deepPurple.withAlpha((0.3 * 255).toInt()),
-                                blurRadius: 30,
-                                spreadRadius: 5,
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: _buildAlbumArt(provider),
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_downward, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                        const SizedBox(height: 40),
-                        
-                        // Song Title
-                        Text(
-                          provider.cancionActual?.titulo ?? '',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        
-                        // Artist Name
-                        Text(
-                          provider.cancionActual?.artista ?? 'Artista desconocido',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        
-                        // Album Name
-                        Text(
-                          provider.cancionActual?.album ?? 'Álbum desconocido',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        
-                        // Progress Bar
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            children: [
-                              Slider(
-                                value: provider.currentPosition.inSeconds.toDouble(),
-                                max: provider.totalDuration.inSeconds.toDouble(),
-                                onChanged: (value) {
-                                  provider.seekTo(Duration(seconds: value.toInt()));
-                                },
-                                activeColor: Colors.deepPurple,
-                                inactiveColor: Colors.grey.shade800,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      _formatDuration(provider.currentPosition),
-                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                    ),
-                                    Text(
-                                      _formatDuration(provider.totalDuration),
-                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        
-                        // Playback Controls
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            // Botón de cola
                             IconButton(
                               icon: Icon(
-                                Icons.shuffle,
-                                size: 28,
-                                color: provider.isShuffle ? Colors.deepPurple : Colors.grey,
+                                Icons.queue_music,
+                                color: provider.modoReproduccion == 'queue'
+                                    ? Colors.deepPurple
+                                    : Colors.white,
                               ),
-                              onPressed: provider.toggleShuffle,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const QueueScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                            const SizedBox(width: 20),
-                            IconButton(
-                              icon: const Icon(Icons.skip_previous, size: 40),
-                              onPressed: provider.cancionAnterior,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 20),
-                            Container(
+                            // Botón de información de cola
+                            if (provider.modoReproduccion == 'queue')
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.deepPurple,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${provider.posicionActual}/${provider.totalCola}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 20),
+                            // Album Art animado
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: provider.isPlaying ? 300 : 280,
+                              height: provider.isPlaying ? 300 : 280,
                               decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.deepPurple,
+                                borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.deepPurple.withAlpha((0.5 * 255).toInt()),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
+                                    color: Colors.deepPurple.withAlpha(provider.isPlaying ? 127 : 76),
+                                    blurRadius: provider.isPlaying ? 40 : 30,
+                                    spreadRadius: provider.isPlaying ? 10 : 5,
                                   ),
                                 ],
                               ),
-                              child: IconButton(
-                                icon: Icon(
-                                  provider.isPlaying ? Icons.pause : Icons.play_arrow,
-                                  size: 40,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: _buildAlbumArt(provider),
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                            
+                            // Título de la canción
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: Text(
+                                provider.cancionActual?.titulo ?? '',
+                                key: ValueKey(provider.cancionActual?.titulo),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            
+                            // Artista
+                            Text(
+                              provider.cancionActual?.artista ?? 'Artista desconocido',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            
+                            // Álbum
+                            Text(
+                              provider.cancionActual?.album ?? 'Álbum desconocido',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                            const SizedBox(height: 30),
+                            
+                            // Slider de progreso
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Column(
+                                children: [
+                                  if (provider.totalDuration.inSeconds > 0)
+                                    Slider(
+                                      value: provider.currentPosition.inSeconds.toDouble(),
+                                      max: provider.totalDuration.inSeconds.toDouble(),
+                                      onChanged: (value) {
+                                        provider.seekTo(Duration(seconds: value.toInt()));
+                                      },
+                                      activeColor: Colors.deepPurple,
+                                      inactiveColor: Colors.grey.shade800,
+                                    )
+                                  else
+                                    const Slider(
+                                      value: 0,
+                                      max: 1,
+                                      onChanged: null,
+                                      activeColor: Colors.deepPurple,
+                                      inactiveColor: Colors.grey,
+                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          _formatDuration(provider.currentPosition),
+                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        ),
+                                        Text(
+                                          _formatDuration(provider.totalDuration),
+                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 30),
+                            
+                            // Botones de control principales
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Shuffle
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.shuffle,
+                                    size: 28,
+                                    color: provider.isShuffle ? Colors.deepPurple : Colors.grey,
+                                  ),
+                                  onPressed: provider.toggleShuffle,
+                                ),
+                                const SizedBox(width: 20),
+                                
+                                // Anterior
+                                IconButton(
+                                  icon: const Icon(Icons.skip_previous, size: 40),
+                                  onPressed: provider.cancionAnterior,
                                   color: Colors.white,
                                 ),
-                                onPressed: provider.playPausa,
+                                const SizedBox(width: 20),
+                                
+                                // Play/Pausa
+                                GestureDetector(
+                                  onTap: () {
+                                    provider.playPausa();
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: provider.isPlaying ? 70 : 70,
+                                    height: provider.isPlaying ? 70 : 70,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.deepPurple,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.deepPurple.withAlpha(provider.isPlaying ? 200 : 127),
+                                          blurRadius: provider.isPlaying ? 30 : 20,
+                                          spreadRadius: provider.isPlaying ? 8 : 5,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 200),
+                                        child: Icon(
+                                          provider.isPlaying ? Icons.pause : Icons.play_arrow,
+                                          key: ValueKey(provider.isPlaying),
+                                          size: 40,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                
+                                // Siguiente
+                                IconButton(
+                                  icon: const Icon(Icons.skip_next, size: 40),
+                                  onPressed: provider.siguienteCancion,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 20),
+                                
+                                // Repeat
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.repeat,
+                                    size: 28,
+                                    color: provider.isRepeat ? Colors.deepPurple : Colors.grey,
+                                  ),
+                                  onPressed: provider.toggleRepeat,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            
+                            // Control de volumen
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 40),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.volume_down, color: Colors.grey, size: 20),
+                                  Expanded(
+                                    child: Slider(
+                                      value: provider.volumen,
+                                      onChanged: (value) => provider.cambiarVolumen(value),
+                                      min: 0,
+                                      max: 1,
+                                      activeColor: Colors.deepPurple,
+                                      inactiveColor: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                  const Icon(Icons.volume_up, color: Colors.grey, size: 20),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 20),
+                            const SizedBox(height: 20),
+                            
+                            // Botón de favorito
                             IconButton(
-                              icon: const Icon(Icons.skip_next, size: 40),
-                              onPressed: provider.siguienteCancion,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 20),
-                            IconButton(
-                              icon: Icon(
-                                Icons.repeat,
-                                size: 28,
-                                color: provider.isRepeat ? Colors.deepPurple : Colors.grey,
-                              ),
-                              onPressed: provider.toggleRepeat,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        
-                        // Volume Control
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.volume_down, color: Colors.grey, size: 20),
-                              Expanded(
-                                child: Slider(
-                                  value: provider.volumen,
-                                  onChanged: (value) => provider.cambiarVolumen(value),
-                                  min: 0,
-                                  max: 1,
-                                  activeColor: Colors.deepPurple,
-                                  inactiveColor: Colors.grey.shade800,
+                              icon: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  provider.cancionActual?.esFavorita ?? false
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  key: ValueKey(provider.cancionActual?.esFavorita),
+                                  color: (provider.cancionActual?.esFavorita ?? false)
+                                      ? Colors.deepPurple
+                                      : Colors.grey,
+                                  size: 30,
                                 ),
                               ),
-                              const Icon(Icons.volume_up, color: Colors.grey, size: 20),
-                            ],
-                          ),
+                              onPressed: () {
+                                if (provider.cancionActual != null) {
+                                  provider.toggleFavorito(provider.cancionActual!);
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 40),
+                          ],
                         ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Favorite Button
-                        IconButton(
-                          icon: Icon(
-                            provider.cancionActual?.esFavorita ?? false
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: (provider.cancionActual?.esFavorita ?? false)
-                                ? Colors.deepPurple
-                                : Colors.grey,
-                            size: 30,
-                          ),
-                          onPressed: () {
-                            if (provider.cancionActual != null) {
-                              provider.toggleFavorito(provider.cancionActual!);
-                            }
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
@@ -241,25 +331,27 @@ class FullPlayerScreen extends StatelessWidget {
   }
 
   Widget _buildAlbumArt(AudioProvider provider) {
-    // Si tiene imagen de portada, mostrarla
     if (provider.cancionActual?.portadaBytes != null) {
-      return Image.memory(
-        provider.cancionActual!.portadaBytes!,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildDefaultAlbumArt();
-        },
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Image.memory(
+          provider.cancionActual!.portadaBytes!,
+          key: ValueKey(provider.cancionActual?.portadaBytes),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildDefaultAlbumArt();
+          },
+        ),
       );
     }
-    
-    // Si no tiene portada, mostrar diseño por defecto
+
     return _buildDefaultAlbumArt();
   }
 
   Widget _buildDefaultAlbumArt() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [

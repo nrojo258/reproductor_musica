@@ -168,7 +168,7 @@ class PlayerControls extends StatelessWidget {
         ),
       );
     }
-    
+
     return Container(
       width: 50,
       height: 50,

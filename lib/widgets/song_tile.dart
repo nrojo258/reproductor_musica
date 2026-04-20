@@ -14,7 +14,7 @@ class SongTile extends StatelessWidget {
       builder: (context, provider, child) {
         final isSelected = provider.cancionActual?.id == cancion.id;
         final isPlayingNow = isSelected && provider.isPlaying;
-        
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
@@ -60,6 +60,20 @@ class SongTile extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Botón para añadir a la cola
+                IconButton(
+                  icon: const Icon(Icons.playlist_add, size: 20),
+                  color: Colors.grey,
+                  onPressed: () {
+                    provider.anadirACola(cancion);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Añadido a la cola: ${cancion.titulo}'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                ),
                 IconButton(
                   icon: Icon(
                     cancion.esFavorita ? Icons.favorite : Icons.favorite_border,
@@ -80,10 +94,17 @@ class SongTile extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  cancion.duracion,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 40,
+                  child: Text(
+                    cancion.duracion.isNotEmpty ? cancion.duracion : '00:00',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
                 ),
               ],
             ),
