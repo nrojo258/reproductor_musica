@@ -10,8 +10,6 @@ class AudioProvider extends ChangeNotifier {
   List<Cancion> _canciones = [];
   List<Cancion> _cancionesFiltradas = [];
   List<Cancion> _cancionesFavoritas = [];
-  
-  // COLA DE REPRODUCCIÓN
   List<Cancion> _colaReproduccion = [];
   int _indiceCola = 0;
   
@@ -26,9 +24,7 @@ class AudioProvider extends ChangeNotifier {
   String _filtroTexto = '';
   int _indiceActual = 0;
   String _seccionActual = 'explore';
-  
-  // Modo de reproducción: 'queue' (cola actual) o 'list' (lista completa)
-  String _modoReproduccion = 'list'; // 'list' o 'queue'
+  String _modoReproduccion = 'list';
 
   List<Cancion> get canciones => _cancionesFiltradas;
   List<Cancion> get cancionesFavoritas => _cancionesFavoritas;
@@ -42,33 +38,40 @@ class AudioProvider extends ChangeNotifier {
   double get volumen => _volumen;
   String get filtroTexto => _filtroTexto;
   String get seccionActual => _seccionActual;
-  
-  // Getters para la cola
   List<Cancion> get colaReproduccion => _colaReproduccion;
   int get indiceCola => _indiceCola;
   String get modoReproduccion => _modoReproduccion;
   
-  // Canciones siguientes en la cola
   List<Cancion> get cancionesSiguientes {
     if (_modoReproduccion == 'queue' && _colaReproduccion.isNotEmpty) {
-      return _colaReproduccion.sublist(_indiceCola + 1);
+      if (_indiceCola + 1 < _colaReproduccion.length) {
+        return _colaReproduccion.sublist(_indiceCola + 1);
+      }
+      return [];
     } else if (_cancionesFiltradas.isNotEmpty) {
-      return _cancionesFiltradas.sublist(_indiceActual + 1);
+      if (_indiceActual + 1 < _cancionesFiltradas.length) {
+        return _cancionesFiltradas.sublist(_indiceActual + 1);
+      }
+      return [];
     }
     return [];
   }
   
-  // Canciones anteriores en la cola
   List<Cancion> get cancionesAnteriores {
     if (_modoReproduccion == 'queue' && _colaReproduccion.isNotEmpty) {
-      return _colaReproduccion.sublist(0, _indiceCola);
+      if (_indiceCola > 0) {
+        return _colaReproduccion.sublist(0, _indiceCola);
+      }
+      return [];
     } else if (_cancionesFiltradas.isNotEmpty) {
-      return _cancionesFiltradas.sublist(0, _indiceActual);
+      if (_indiceActual > 0) {
+        return _cancionesFiltradas.sublist(0, _indiceActual);
+      }
+      return [];
     }
     return [];
   }
   
-  // Posición actual en la cola (1-based para mostrar)
   int get posicionActual {
     if (_modoReproduccion == 'queue' && _colaReproduccion.isNotEmpty) {
       return _indiceCola + 1;
@@ -78,7 +81,6 @@ class AudioProvider extends ChangeNotifier {
     return 0;
   }
   
-  // Total de canciones en la cola
   int get totalCola {
     if (_modoReproduccion == 'queue') {
       return _colaReproduccion.length;
@@ -143,7 +145,6 @@ class AudioProvider extends ChangeNotifier {
         _indiceActual = 0;
       }
     } catch (e) {
-      print('Error al cargar canciones: $e');
       _canciones = [];
       _cancionesFiltradas = [];
     } finally {
@@ -166,7 +167,6 @@ class AudioProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Crear una nueva cola de reproducción
   void crearCola(List<Cancion> canciones, {int startIndex = 0}) {
     _colaReproduccion = List.from(canciones);
     _indiceCola = startIndex;
@@ -174,19 +174,16 @@ class AudioProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Añadir canción a la cola
   void anadirACola(Cancion cancion) {
     _colaReproduccion.add(cancion);
     notifyListeners();
   }
 
-  // Añadir varias canciones a la cola
   void anadirMultiplesACola(List<Cancion> canciones) {
     _colaReproduccion.addAll(canciones);
     notifyListeners();
   }
 
-  // Eliminar canción de la cola
   void eliminarDeCola(int index) {
     if (index >= 0 && index < _colaReproduccion.length) {
       _colaReproduccion.removeAt(index);
@@ -197,14 +194,12 @@ class AudioProvider extends ChangeNotifier {
     }
   }
 
-  // Mover canción en la cola
   void moverEnCola(int oldIndex, int newIndex) {
     if (oldIndex >= 0 && oldIndex < _colaReproduccion.length &&
         newIndex >= 0 && newIndex < _colaReproduccion.length) {
       final cancion = _colaReproduccion.removeAt(oldIndex);
       _colaReproduccion.insert(newIndex, cancion);
       
-      // Ajustar índice actual si es necesario
       if (oldIndex == _indiceCola) {
         _indiceCola = newIndex;
       } else if (oldIndex < _indiceCola && newIndex >= _indiceCola) {
@@ -216,7 +211,6 @@ class AudioProvider extends ChangeNotifier {
     }
   }
 
-  // Limpiar cola
   void limpiarCola() {
     _colaReproduccion.clear();
     _indiceCola = 0;
@@ -224,13 +218,11 @@ class AudioProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Cambiar al modo lista (toda la biblioteca)
   void cambiarModoLista() {
     _modoReproduccion = 'list';
     notifyListeners();
   }
 
-  // Reproducir desde la cola
   Future<void> reproducirDesdeCola(int index) async {
     if (index >= 0 && index < _colaReproduccion.length) {
       _indiceCola = index;
@@ -240,16 +232,13 @@ class AudioProvider extends ChangeNotifier {
   }
 
   Future<void> reproducirCancion(Cancion cancion) async {
-    // Buscar la canción en la lista filtrada
     _indiceActual = _cancionesFiltradas.indexWhere((c) => c.id == cancion.id);
     
-    // Si estamos en modo cola, también actualizar la cola
     if (_modoReproduccion == 'queue') {
       final indexEnCola = _colaReproduccion.indexWhere((c) => c.id == cancion.id);
       if (indexEnCola != -1) {
         _indiceCola = indexEnCola;
       } else {
-        // Si la canción no está en la cola, cambiar a modo lista
         _modoReproduccion = 'list';
       }
     }
@@ -265,7 +254,6 @@ class AudioProvider extends ChangeNotifier {
       _isPlaying = true;
       notifyListeners();
     } catch (e) {
-      print('Error al reproducir: $e');
       notifyListeners();
     }
   }
@@ -280,38 +268,28 @@ class AudioProvider extends ChangeNotifier {
         _isPlaying = true;
       }
       notifyListeners();
-    } catch (e) {
-      print('Error en playPausa: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> siguienteCancion() async {
+    if (_isShuffle) {
+      await _reproducirSiguienteAleatorio();
+      return;
+    }
+
     if (_modoReproduccion == 'queue' && _colaReproduccion.isNotEmpty) {
       if (_indiceCola + 1 < _colaReproduccion.length) {
         _indiceCola++;
         await _reproducirCancion(_colaReproduccion[_indiceCola]);
-      } else if (_isRepeat) {
-        _indiceCola = 0;
-        await _reproducirCancion(_colaReproduccion[0]);
-      } else {
-        // Volver al modo lista cuando termina la cola
-        _modoReproduccion = 'list';
-        await siguienteCancion();
       }
     } else {
-      // Modo lista normal
       if (_cancionesFiltradas.isEmpty) return;
       
       if (_indiceActual + 1 < _cancionesFiltradas.length) {
         _indiceActual++;
-      } else if (_isRepeat) {
-        _indiceActual = 0;
-      } else {
-        return;
+        final nuevaCancion = _cancionesFiltradas[_indiceActual];
+        await _reproducirCancion(nuevaCancion);
       }
-      
-      final nuevaCancion = _cancionesFiltradas[_indiceActual];
-      await _reproducirCancion(nuevaCancion);
     }
   }
 
@@ -320,23 +298,15 @@ class AudioProvider extends ChangeNotifier {
       if (_indiceCola > 0) {
         _indiceCola--;
         await _reproducirCancion(_colaReproduccion[_indiceCola]);
-      } else if (_isRepeat) {
-        _indiceCola = _colaReproduccion.length - 1;
-        await _reproducirCancion(_colaReproduccion[_indiceCola]);
       }
     } else {
       if (_cancionesFiltradas.isEmpty) return;
       
       if (_indiceActual > 0) {
         _indiceActual--;
-      } else if (_isRepeat) {
-        _indiceActual = _cancionesFiltradas.length - 1;
-      } else {
-        return;
+        final nuevaCancion = _cancionesFiltradas[_indiceActual];
+        await _reproducirCancion(nuevaCancion);
       }
-      
-      final nuevaCancion = _cancionesFiltradas[_indiceActual];
-      await _reproducirCancion(nuevaCancion);
     }
   }
 
@@ -365,25 +335,10 @@ class AudioProvider extends ChangeNotifier {
   Future<void> _repetirCancionActual() async {
     if (_cancionActual == null) return;
     
-    try {
-      await _audioPlayer.seek(Duration.zero);
-      await _audioPlayer.resume();
-      _isPlaying = true;
-      notifyListeners();
-    } catch (e) {
-      print('Error al repetir: $e');
-      try {
-        await _audioPlayer.stop();
-        await Future.delayed(const Duration(milliseconds: 50));
-        await _audioPlayer.setSourceUrl(_cancionActual!.url);
-        await _audioPlayer.setVolume(_volumen);
-        await _audioPlayer.resume();
-        _isPlaying = true;
-        notifyListeners();
-      } catch (e2) {
-        print('Error en fallback: $e2');
-      }
-    }
+    await _audioPlayer.seek(Duration.zero);
+    await _audioPlayer.resume();
+    _isPlaying = true;
+    notifyListeners();
   }
 
   Future<void> _reproducirCancion(Cancion cancion) async {
@@ -395,10 +350,7 @@ class AudioProvider extends ChangeNotifier {
       await _audioPlayer.resume();
       _isPlaying = true;
       notifyListeners();
-    } catch (e) {
-      print('Error en _reproducirCancion: $e');
-      notifyListeners();
-    }
+    } catch (e) {}
   }
 
   void toggleShuffle() {
@@ -422,7 +374,7 @@ class AudioProvider extends ChangeNotifier {
   }
 
   void cambiarVolumen(double volumen) {
-    _volumen = volumen;
+    _volumen = volumen.clamp(0.0, 1.0);
     _audioPlayer.setVolume(_volumen);
     notifyListeners();
   }

@@ -38,7 +38,6 @@ class NowPlayingBar extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      // Album Art
                       Container(
                         width: 50,
                         height: 50,
@@ -52,15 +51,12 @@ class NowPlayingBar extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-
-                      // Información de la canción
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                // Indicador de posición en cola
                                 if (provider.modoReproduccion == 'queue')
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -103,11 +99,8 @@ class NowPlayingBar extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                      // Botones de control
                       Row(
                         children: [
-                          // Botón de favorito
                           IconButton(
                             icon: Icon(
                               provider.cancionActual?.esFavorita ?? false
@@ -124,8 +117,6 @@ class NowPlayingBar extends StatelessWidget {
                               }
                             },
                           ),
-
-                          // Botón de cola
                           IconButton(
                             icon: const Icon(Icons.queue_music, size: 20),
                             onPressed: () {
@@ -140,15 +131,11 @@ class NowPlayingBar extends StatelessWidget {
                                 ? Colors.deepPurple
                                 : Colors.white,
                           ),
-
-                          // Botón anterior
                           IconButton(
                             icon: const Icon(Icons.skip_previous),
                             onPressed: provider.cancionAnterior,
                             color: Colors.white,
                           ),
-
-                          // Botón play/pausa
                           Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
@@ -168,8 +155,6 @@ class NowPlayingBar extends StatelessWidget {
                               ),
                             ),
                           ),
-
-                          // Botón siguiente
                           IconButton(
                             icon: const Icon(Icons.skip_next),
                             onPressed: provider.siguienteCancion,
@@ -180,8 +165,6 @@ class NowPlayingBar extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                // Barra de progreso
                 Container(
                   height: 2,
                   margin: const EdgeInsets.symmetric(horizontal: 16),

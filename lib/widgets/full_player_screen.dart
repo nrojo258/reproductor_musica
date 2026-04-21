@@ -32,7 +32,6 @@ class FullPlayerScreen extends StatelessWidget {
             child: SafeArea(
               child: Column(
                 children: [
-                  // Header con botones
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
@@ -44,7 +43,6 @@ class FullPlayerScreen extends StatelessWidget {
                         ),
                         Row(
                           children: [
-                            // Botón de cola
                             IconButton(
                               icon: Icon(
                                 Icons.queue_music,
@@ -61,7 +59,6 @@ class FullPlayerScreen extends StatelessWidget {
                                 );
                               },
                             ),
-                            // Botón de información de cola
                             if (provider.modoReproduccion == 'queue')
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -92,7 +89,6 @@ class FullPlayerScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const SizedBox(height: 20),
-                            // Album Art animado
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               width: provider.isPlaying ? 300 : 280,
@@ -113,8 +109,6 @@ class FullPlayerScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 40),
-                            
-                            // Título de la canción
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 300),
                               child: Text(
@@ -128,8 +122,6 @@ class FullPlayerScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            
-                            // Artista
                             Text(
                               provider.cancionActual?.artista ?? 'Artista desconocido',
                               style: TextStyle(
@@ -138,8 +130,6 @@ class FullPlayerScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            
-                            // Álbum
                             Text(
                               provider.cancionActual?.album ?? 'Álbum desconocido',
                               style: TextStyle(
@@ -148,15 +138,13 @@ class FullPlayerScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 30),
-                            
-                            // Slider de progreso
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: Column(
                                 children: [
                                   if (provider.totalDuration.inSeconds > 0)
                                     Slider(
-                                      value: provider.currentPosition.inSeconds.toDouble(),
+                                      value: provider.currentPosition.inSeconds.toDouble().clamp(0.0, provider.totalDuration.inSeconds.toDouble()),
                                       max: provider.totalDuration.inSeconds.toDouble(),
                                       onChanged: (value) {
                                         provider.seekTo(Duration(seconds: value.toInt()));
@@ -192,12 +180,9 @@ class FullPlayerScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 30),
-                            
-                            // Botones de control principales
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Shuffle
                                 IconButton(
                                   icon: Icon(
                                     Icons.shuffle,
@@ -207,24 +192,20 @@ class FullPlayerScreen extends StatelessWidget {
                                   onPressed: provider.toggleShuffle,
                                 ),
                                 const SizedBox(width: 20),
-                                
-                                // Anterior
                                 IconButton(
                                   icon: const Icon(Icons.skip_previous, size: 40),
                                   onPressed: provider.cancionAnterior,
                                   color: Colors.white,
                                 ),
                                 const SizedBox(width: 20),
-                                
-                                // Play/Pausa
                                 GestureDetector(
                                   onTap: () {
                                     provider.playPausa();
                                   },
                                   child: AnimatedContainer(
                                     duration: const Duration(milliseconds: 200),
-                                    width: provider.isPlaying ? 70 : 70,
-                                    height: provider.isPlaying ? 70 : 70,
+                                    width: 70,
+                                    height: 70,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: Colors.deepPurple,
@@ -250,16 +231,12 @@ class FullPlayerScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 20),
-                                
-                                // Siguiente
                                 IconButton(
                                   icon: const Icon(Icons.skip_next, size: 40),
                                   onPressed: provider.siguienteCancion,
                                   color: Colors.white,
                                 ),
                                 const SizedBox(width: 20),
-                                
-                                // Repeat
                                 IconButton(
                                   icon: Icon(
                                     Icons.repeat,
@@ -271,8 +248,6 @@ class FullPlayerScreen extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            
-                            // Control de volumen
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 40),
                               child: Row(
@@ -293,8 +268,6 @@ class FullPlayerScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            
-                            // Botón de favorito
                             IconButton(
                               icon: AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 200),

@@ -28,14 +28,12 @@ class SupabaseService {
           String artista = 'Artista desconocido';
           String album = 'Álbum desconocido';
           String? portadaPath;
-          String duracion = '00:00';
 
           if (metadatosConfig != null) {
             titulo = metadatosConfig['titulo'] ?? '';
             artista = metadatosConfig['artista'] ?? 'Artista desconocido';
             album = metadatosConfig['album'] ?? 'Álbum desconocido';
             portadaPath = metadatosConfig['portada'];
-            duracion = metadatosConfig['duracion'] ?? '00:00';
           } else {
             titulo = file.name
                 .replaceAll('.mp3', '')
@@ -51,7 +49,7 @@ class SupabaseService {
             artista: artista,
             album: album,
             portadaUrl: portadaPath,
-            duracion: duracion,
+            duracion: '00:00',
           );
 
           if (portadaPath != null && portadaPath.isNotEmpty) {
@@ -64,6 +62,8 @@ class SupabaseService {
           canciones.add(cancion);
         }
       }
+
+      canciones.sort((a, b) => a.titulo.compareTo(b.titulo));
 
       return canciones;
 
